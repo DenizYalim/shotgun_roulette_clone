@@ -6,15 +6,18 @@ class Player(ABC):
     def __init__(self, name="blank"):
         self.name = name
         self.health = 3
-        self.items = [] 
-    
+        self.items = []
+
     def ask_tactic(self, players: list["Player"]):
         pass
 
 
 class human_player(Player):
     def ask_tactic(self, players: list["Player"]):
-        print("which player to shoot? player count: " + [i for i in range(len(players))].__str__())
+        print(
+            "which player to shoot? player count: "
+            + [i for i in range(len(players))].__str__()
+        )
         a: int = int(input())
 
         return a
@@ -33,10 +36,10 @@ class Shell:
 
     def shoot_player(self, player: Player):
         if self.state == "live":
-            print("shot live at player: " + player.name)
+            print("shot LIVE at " + player.name)
             player.health = player.health - 1
         else:
-            print("shot blank at player: " + player.name)
+            print("shot BLANK at " + player.name)
 
 
 class game_state:
@@ -48,15 +51,22 @@ class game_state:
 
     def turn(self):
         self.turn_count = self.turn_count + 1
-        if len(self.current_shells) == 0:
-            self.generate_shells(self.current_shells)
+
+        print(
+            f"{self.turn_count}. Turn; Players: "
+            + str([[player.name, player.health] for player in self.players])
+        )
 
         for player in self.players:
+            if len(self.current_shells) == 0:
+                self.generate_shells(self.current_shells)
             target_index = player.ask_tactic(players=self.players)  # ask for target
             self.current_shells[self.current_shell].shoot_player(
                 self.players[target_index]
             )  # shoot
-            self.current_shells.remove(self.current_shells[self.current_shell])  # remove used shell
+            self.current_shells.remove(
+                self.current_shells[self.current_shell]
+            )  # remove used shell
 
             if self.any_players_dead():
                 break
@@ -71,7 +81,7 @@ class game_state:
         return {"turn_count": self.turn_count, "players": self.players}
 
     def game_over(self) -> bool:
-        for player in self.players: 
+        for player in self.players:
             if player.health <= 0:
                 print(f"player: {player.name} is dead!")
                 return True
@@ -88,7 +98,7 @@ class game_state:
                 shell = Shell("blank")
 
             mag.append(shell)
-        print(f"new shells: "+ str([shell.state for shell in self.current_shells]))
+        print(f"new shells: " + str([shell.state for shell in self.current_shells]))
 
 
 def start():
@@ -97,7 +107,6 @@ def start():
     game = game_state(players=players)
 
     while not game.game_over():
-        print("new turn")
         game.turn()
 
 
