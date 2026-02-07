@@ -8,11 +8,12 @@ class Player(ABC):
         self.health = 3
         self.items = []
 
+    @abstractmethod
     def ask_tactic(self, players: list["Player"]):
         pass
 
 
-class human_player(Player):
+class HumanPlayer(Player):
     def ask_tactic(self, players: list["Player"]):
         print(
             "which player to shoot? player count: "
@@ -23,7 +24,7 @@ class human_player(Player):
         return a
 
 
-class ai_player(Player):
+class AIPlayer(Player):
     def ask_tactic(self, players: list["Player"]):
         a = random.randrange(0, len(players))  # assuming exclusive range
         print(f"ai chose: {a}")
@@ -64,27 +65,27 @@ class game_state:
             self.current_shells[self.current_shell].shoot_player(
                 self.players[target_index]
             )  # shoot
-            self.current_shells.remove(
-                self.current_shells[self.current_shell]
-            )  # remove used shell
+            self.current_shells.pop(self.current_shell)
 
             if self.any_players_dead():
                 break
 
     def any_players_dead(self):
+        alive_count = 0 # support for multiple people
         for player in self.players:
-            if player.health <= 0:
-                return True
+            if player.health > 0:
+                alive_count = alive_count + 1
+        
+        if alive_count == 1:
+            return True
         return False
 
     def get_game_status(self):
         return {"turn_count": self.turn_count, "players": self.players}
 
     def game_over(self) -> bool:
-        for player in self.players:
-            if player.health <= 0:
-                print(f"player: {player.name} is dead!")
-                return True
+        if self.any_players_dead():
+            return True
         return False
 
     def generate_shells(self, mag: list[Shell], mag_size=5):
@@ -103,7 +104,7 @@ class game_state:
 
 def start():
     print("starting game")
-    players = [human_player(name="human"), ai_player(name="AI")]
+    players = [HumanPlayer(name="human"), AIPlayer(name="AI")]
     game = game_state(players=players)
 
     while not game.game_over():
