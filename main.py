@@ -35,18 +35,19 @@ class Shell:
     def __init__(self, state):
         self.state: str = state
 
-    def shoot_player(self, player: Player):
+    def shoot_player(self, player: Player, shooter: Player = None):
         if self.state == "live":
-            print("shot LIVE at " + player.name)
+            print(f"{shooter.name} shot LIVE at " + player.name)
             player.health = player.health - 1
         else:
-            print("shot BLANK at " + player.name)
+            print(f"{shooter.name} shot BLANK at " + player.name)
 
 
 class game_state:
     def __init__(self, players: list[Player]):
         self.turn_count = 0
         self.players = players
+        self._all_players = players # includes dead players too
         self.current_shells: list[Shell] = []
         self.current_shell = 0
 
@@ -55,7 +56,7 @@ class game_state:
 
         print(
             f"{self.turn_count}. Turn; Players: "
-            + str([[player.name, player.health] for player in self.players])
+            + str([[player.name, player.health] for player in self._all_players])
         )
 
         for player in self.players:
@@ -63,7 +64,7 @@ class game_state:
                 self.generate_shells(self.current_shells)
             target_index = player.ask_tactic(players=self.players)  # ask for target
             self.current_shells[self.current_shell].shoot_player(
-                self.players[target_index]
+                self.players[target_index], shooter=player
             )  # shoot
             self.current_shells.pop(self.current_shell)
 
@@ -75,6 +76,9 @@ class game_state:
         for player in self.players:
             if player.health > 0:
                 alive_count = alive_count + 1
+            else:
+                print(f"{player.name} is dead and is removed from the game!")
+                self.players.remove(player)
         
         if alive_count == 1:
             return True
@@ -103,12 +107,13 @@ class game_state:
 
 
 def start():
-    print("starting game")
-    players = [HumanPlayer(name="human"), AIPlayer(name="AI")]
+    print("starting game",end="\n\n")
+    players = [HumanPlayer(name="human"), HumanPlayer(name="human2"), AIPlayer(name="AI"), AIPlayer(name="AI2"), AIPlayer(name="AI3")]
     game = game_state(players=players)
 
     while not game.game_over():
         game.turn()
+        print("\n\n")
 
 
 if __name__ == "__main__":
